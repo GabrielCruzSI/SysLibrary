@@ -7,22 +7,42 @@ use app\exceptions\ControllerNotExistsException;
 
 class Controller {
 
+    /**
+     * Contém a URI que foi solicitada na requisição
+     *
+     * @var mixed
+     */
 	private $uri;
 
-	private $folders = [
-		"app\controllers\portal",
-		"app\controllers\admin"
-	];
+    /**
+     * Contém as pastas de controller setadas automaticamente
+     *
+     * @var array
+     */
+	private $folders = [];
 
+    /**
+     * @var string
+     */
 	private $controller;
 
+    /**
+     * @var string
+     */
 	private $namespace;
 
+    /**
+     * Controller constructor.
+     */
 	public function __construct()
 	{
 		$this->uri = Uri::uri();
 	}
 
+    /**
+     * @return mixed
+     * @throws ControllerNotExistsException
+     */
 	public function load()
 	{
 		if ($this->isHome()) {
@@ -32,6 +52,10 @@ class Controller {
 		return $this->controllerNotHome();
 	}
 
+    /**
+     * @return mixed
+     * @throws ControllerNotExistsException
+     */
 	private function controllerHome()
 	{
 		if (!$this->controllerExists('HomeController')) {
@@ -41,6 +65,10 @@ class Controller {
 		return $this->instatiateController();
 	}
 
+    /**
+     * @return mixed
+     * @throws ControllerNotExistsException
+     */
 	private function controllerNotHome()
 	{
 		$controller = $this->getControllerNotHome();
@@ -52,6 +80,9 @@ class Controller {
 		return $this->instatiateController($controller);
 	}
 
+    /**
+     * @return string
+     */
 	private function getControllerNotHome()
 	{
 		$explode = explode("/", $this->uri);
@@ -64,18 +95,26 @@ class Controller {
 		return ucfirst(ltrim($this->uri, "/")) . "Controller";
 	}
 
+    /**
+     * @return bool
+     */
 	private function isHome()
 	{
 		return ($this->uri == "/");
 	}
 
+    /**
+     * @param $controller
+     * @return bool
+     */
 	private function controllerExists($controller)
 	{
 		$controllerExists = false;
 
-		foreach ($this->folders as $folder) {
-			if (class_exists($folder . "\\" . $controller)) {
-				$controllerExists = true;
+		$this->setFolders();
+        foreach ($this->folders as $folder) {
+            if (class_exists($folder . "\\" . $controller)) {
+                $controllerExists = true;
 				$this->namespace = $folder;
 				$this->controller = $controller;
 			}
@@ -84,10 +123,30 @@ class Controller {
 		return $controllerExists;
 	}
 
+    /**
+     * @return mixed
+     */
 	private function instatiateController()
 	{
 		$controller = $this->namespace . "\\" . $this->controller;
 
 		return new $controller;
 	}
+
+    /**
+     * Seta os paths presentes na pasta controllers
+     */
+	private function setFolders()
+    {
+        # Faz um scan das pastas disponíveis
+        $folders = scandir("../app/controllers");
+
+        # Itera sobre o array setando os controllers existentes
+        foreach ($folders as $folder) {
+            if (!in_array($folder, [".", "..", "ContainerController.php"])){
+
+                $this->folders[] = "app\\controllers\\" . $folder;
+            }
+        }
+    }
 }
