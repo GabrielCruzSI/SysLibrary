@@ -9,5 +9,8 @@ class HomeController extends ContainerController{
 
 	public function index()
 	{
+        $this->view([
+            'title' => 'Sistema de Gerenciamento de Livros - SysLibrary'
+        ], "home.index");
 	}
 }
